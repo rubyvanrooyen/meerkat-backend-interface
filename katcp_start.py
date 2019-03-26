@@ -57,21 +57,45 @@ def cli():
 
     return parser.parse_args()
 
+
+# Set up logging to console and file.
+def set_logger(log_file='/tmp/BLUSE.katcpserver.log',
+               log_level=logging.DEBUG):
+
+    log = logging.getLogger("BLUSE.interface")
+    FORMAT = "[ %(levelname)s - %(asctime)s - %(filename)s:%(lineno)s] %(message)s"
+    logging.basicConfig(format=FORMAT)
+    log.setLevel(log_level)
+
+    # create and add logfile handler
+    f_handler = logging.FileHandler(log_file)
+    log_format = logging.Formatter(FORMAT)  # optional
+    f_handler.setFormatter(log_format)
+    log.addHandler(f_handler)
+
+    # Depricated logging in newer versions of ubuntu does not work like this anymore
+    # syslog_addr = '/dev/log' if os.path.exists('/dev/log') else '/var/run/syslog'
+    # handler = logging.handlers.SysLogHandler(address=syslog_addr)
+    # log.addHandler(handler)
+
+    return log
+
+
 if __name__ == "__main__":
 
     args = cli()
 
-    FORMAT = "[ %(levelname)s - %(asctime)s - %(filename)s:%(lineno)s] %(message)s"
-    # logger = logging.getLogger('reynard')
-    logging.basicConfig(format=FORMAT)
-    log.setLevel(logging.DEBUG)
+    if args.debug:
+        # note: debug logging will only go to logfile
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+
+    log = set_logger(log_level=log_level)
     log.info("Starting BLBackendInterface instance")
-    syslog_addr = '/dev/log' if os.path.exists('/dev/log') else '/var/run/syslog'
-    handler = logging.handlers.SysLogHandler(address=syslog_addr) 
-    log.addHandler(handler)
 
     ioloop = tornado.ioloop.IOLoop.current()
-    server = BLBackendInterface("localhost", args.port)
+    server = BLBackendInterface(args.ip, args.port)
     signal.signal(signal.SIGINT, lambda sig, frame: ioloop.add_callback_from_signal(
         on_shutdown, ioloop, server))
     def start():
