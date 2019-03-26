@@ -10,11 +10,9 @@ from argparse import (ArgumentParser,
 from src.katcp_server import BLBackendInterface
 # from src.effelsberg.config import get_nodes
 
-log = logging.getLogger("BLUSE.interface")
-
 
 @tornado.gen.coroutine
-def on_shutdown(ioloop, server):
+def on_shutdown(ioloop, server, log):
     log.info("Shutting down server")
     yield server.stop()
     ioloop.stop()
@@ -55,7 +53,7 @@ def cli():
         action='store_true',
         help='verbose logger output for debugging')
 
-    return parser.parse_args()
+    main(parser.parse_args())
 
 
 # Set up logging to console and file.
@@ -81,9 +79,7 @@ def set_logger(log_file='/tmp/BLUSE.katcpserver.log',
     return log
 
 
-if __name__ == "__main__":
-
-    args = cli()
+def main(args):
 
     if args.debug:
         # note: debug logging will only go to logfile
@@ -108,3 +104,7 @@ if __name__ == "__main__":
         #     server._add_node(node["host"],ip,node["port"])
     ioloop.add_callback(start)
     ioloop.start()
+
+if __name__ == "__main__":
+    cli()
+
