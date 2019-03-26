@@ -3,7 +3,6 @@ import logging
 import os
 import signal
 import socket
-import sys
 import tornado
 
 from argparse import (ArgumentParser,
@@ -13,14 +12,16 @@ from src.katcp_server import BLBackendInterface
 
 log = logging.getLogger("BLUSE.interface")
 
+
 @tornado.gen.coroutine
 def on_shutdown(ioloop, server):
     log.info("Shutting down server")
     yield server.stop()
     ioloop.stop()
 
-if __name__ == "__main__":
-    usage = "{} [options]".format(prog)
+
+def cli():
+    usage = "%(prog)s [options]"
     description = 'start BLUSE KATCP server'
 
     parser = ArgumentParser(usage=usage,
@@ -29,12 +30,14 @@ if __name__ == "__main__":
     parser.add_argument(
         '--ip',
         type=str,
-        default="10.8.76.31",  # BLH1 IP address
+        default="localhost",
+        # default="10.8.76.31",  # BLH1 IP address
         help='fixed IP of localhost system')
     parser.add_argument(
         '-p', '--port',
         type=long,
-        default=8050,  # default port on BLH1
+        default=5000,  # default CAM port
+        # default=8050,  # default port on BLH1
         help='port number to bind to')
     parser.add_argument(
         '--nodeset',
@@ -52,11 +55,11 @@ if __name__ == "__main__":
         action='store_true',
         help='verbose logger output for debugging')
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    if not args.port:
-        print "MissingArgument: Port number"
-        sys.exit(-1)
+if __name__ == "__main__":
+
+    args = cli()
 
     FORMAT = "[ %(levelname)s - %(asctime)s - %(filename)s:%(lineno)s] %(message)s"
     # logger = logging.getLogger('reynard')
