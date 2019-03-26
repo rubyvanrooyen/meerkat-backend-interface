@@ -1,8 +1,8 @@
-import json
+# import json
 import logging
-import os
+# import os
 import signal
-import socket
+# import socket
 import tornado
 
 from argparse import (ArgumentParser,
@@ -92,11 +92,14 @@ def main(args):
 
     ioloop = tornado.ioloop.IOLoop.current()
     server = BLBackendInterface(args.ip, args.port)
-    signal.signal(signal.SIGINT, lambda sig, frame: ioloop.add_callback_from_signal(
-        on_shutdown, ioloop, server))
+    signal.signal(signal.SIGINT,
+                  lambda sig, frame: ioloop.add_callback_from_signal(
+                      on_shutdown, ioloop, server, log))
+
     def start():
         server.start()
-        log.info("Listening at {0}, Ctrl-C to terminate server".format(server.bind_address))
+        log.info("Listening at {0}, Ctrl-C to terminate server".format(
+            server.bind_address))
         # nodes = get_nodes(args.nodeset)
         # for node in nodes:
         #     ip = socket.gethostbyname(node["host"])
@@ -105,6 +108,6 @@ def main(args):
     ioloop.add_callback(start)
     ioloop.start()
 
+
 if __name__ == "__main__":
     cli()
-
