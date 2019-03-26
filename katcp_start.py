@@ -1,11 +1,13 @@
-import signal
-import sys
-import os
-import tornado
-import logging
 import json
+import logging
+import os
+import signal
 import socket
-from optparse import OptionParser
+import sys
+import tornado
+
+from argparse import (ArgumentParser,
+                      ArgumentDefaultsHelpFormatter)
 from src.katcp_server import BLBackendInterface
 # from src.effelsberg.config import get_nodes
 
@@ -18,15 +20,41 @@ def on_shutdown(ioloop, server):
     ioloop.stop()
 
 if __name__ == "__main__":
-    usage = "usage: %prog [options]"
-    parser = OptionParser(usage=usage)
-    parser.add_option('-p', '--port', dest='port', type=long,
-        help='Port number to bind to', default=5000)
-    parser.add_option('', '--nodeset',dest='nodeset',type=str,
-        help='Name of the nodeset to use',default="effelsberg")
-    (opts, args) = parser.parse_args()
+    usage = "{} [options]".format(prog)
+    description = 'start BLUSE KATCP server'
 
-    if not opts.port:
+    parser = ArgumentParser(usage=usage,
+                            description=description,
+                            formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        '--ip',
+        type=str,
+        default="10.8.76.31",  # BLH1 IP address
+        help='fixed IP of localhost system')
+    parser.add_argument(
+        '-p', '--port',
+        type=long,
+        default=8050,  # default port on BLH1
+        help='port number to bind to')
+    parser.add_argument(
+        '--nodeset',
+        type=str,
+        default="effelsberg",
+        help='name of the nodeset to use')
+
+    # Options for development and testing
+    title = "development and testing"
+    description = "additional convenience settings"
+    group = parser.add_argument_group(title=title,
+                                      description=description)
+    group.add_argument(
+        '--debug',
+        action='store_true',
+        help='verbose logger output for debugging')
+
+    args = parser.parse_args()
+
+    if not args.port:
         print "MissingArgument: Port number"
         sys.exit(-1)
 
@@ -40,13 +68,13 @@ if __name__ == "__main__":
     log.addHandler(handler)
 
     ioloop = tornado.ioloop.IOLoop.current()
-    server = BLBackendInterface("localhost", opts.port)
+    server = BLBackendInterface("localhost", args.port)
     signal.signal(signal.SIGINT, lambda sig, frame: ioloop.add_callback_from_signal(
         on_shutdown, ioloop, server))
     def start():
         server.start()
         log.info("Listening at {0}, Ctrl-C to terminate server".format(server.bind_address))
-        # nodes = get_nodes(opts.nodeset)
+        # nodes = get_nodes(args.nodeset)
         # for node in nodes:
         #     ip = socket.gethostbyname(node["host"])
         #     print node["host"],ip,node["port"]
